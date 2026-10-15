@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { resolveAssetUrl } from '@slidev/client/layoutHelper.ts'
+
 const sponsors = [
   'Helvetia', 'Karakun', 'Kanton Basel-Stadt', 'ERNI',
   'Innofuse', 'BaselTech', 'Basel', 'Java User Group Switzerland',
@@ -13,7 +15,7 @@ const sponsors = [
     <img class="sponsor-skyline" src="/baselone/sponsor-assets/image1.png" alt="" />
     <div class="sponsor-grid">
       <div v-for="(name, index) in sponsors" :key="name" class="sponsor-box">
-        <img :src="`/baselone/sponsor-assets/logo-${index + 1}.png`" :alt="name" />
+        <img :src="resolveAssetUrl(`/baselone/sponsor-assets/logo-${index + 1}.png`)" :alt="name" />
       </div>
     </div>
     <footer><span>#BaselOne26</span><span>baselone.ch</span></footer>

@@ -4,7 +4,7 @@
     <h1>Vielen Dank.</h1>
     <div class="abs ask"><b>Ich freue mich auf Eure Fragen!</b></div>
     <div v-for="(c, i) in contacts" :key="c.text" class="abs row" :style="{ top: 232 + i * 48.5 + 'px' }">
-      <img :src="c.icon" alt="" />
+      <img :src="resolveAssetUrl(c.icon)" alt="" />
       <span>{{ c.text }}</span>
     </div>
     <img class="abs" src="/embarc/s10-0-68x452.png" style="left:68px;top:452px;width:238px" alt="embarc" />
@@ -22,6 +22,8 @@
 </template>
 
 <script setup lang="ts">
+import { resolveAssetUrl } from '@slidev/client/layoutHelper.ts'
+
 const contacts = [
   { icon: '/embarc/s10-7-68x235.png', text: 'falk.sippach@embarc.de' },
   { icon: '/embarc/s10-8-68x284.png', text: 'linkedin.com/in/falk-sippach' },

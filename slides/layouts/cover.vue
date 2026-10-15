@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import { resolveAssetUrl } from '@slidev/client/layoutHelper.ts'
+
 defineProps<{ image?: string }>()
 </script>
 
 <template>
   <div class="slidev-layout embarc-dark cover">
     <div class="oval"></div>
-    <img v-if="image" class="oval-img" :src="image" alt="" />
+    <img v-if="image" class="oval-img" :src="resolveAssetUrl(image)" alt="" />
     <div class="title-box"><slot /></div>
     <div class="author-box"><slot name="author" /></div>
     <div class="date-box"><slot name="date" /></div>
