@@ -190,9 +190,9 @@ layout: default
   <a href="https://github.com/sippsack/java-value-classes" target="_blank" rel="noopener noreferrer">github.com/sippsack/java-value-classes</a>
 </div>
 
-- [sli.dev](https://sli.dev/) Folien im Ordner slides
+- [sli.dev](https://sli.dev/) Folien im Ordner [slides](https://github.com/sippsack/java-value-classes/tree/main/slides)
   - Live unter [https://sippsack.github.io/java-value-classes/](https://sippsack.github.io/java-value-classes/)
-- Demos im Ordner demo/src
+- Demos im Ordner [demo/src](https://github.com/sippsack/java-value-classes/tree/main/demo/src)
 
 ---
 layout: full-image
