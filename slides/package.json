@@ -1,0 +1,21 @@
+{
+  "name": "valhalla-now-slides",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "dev": "slidev --open",
+    "build": "slidev build",
+    "export": "slidev export --output valhalla-now.pdf"
+  },
+  "devDependencies": {
+    "@fontsource/fira-code": "^5.3.0",
+    "@fontsource/rajdhani": "^5.3.0",
+    "@slidev/cli": "^53.0.0",
+    "@slidev/theme-default": "^0.25.0",
+    "playwright-chromium": "^1.64.0",
+    "vue": "^3.5.44"
+  }
+}

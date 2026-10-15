@@ -1,0 +1,7 @@
+node_modules/
+.slidev/
+dist/
+*.pdf
+export/
+.DS_Store
+.idea/
