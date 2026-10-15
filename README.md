@@ -11,5 +11,32 @@ GitHub Actions baut und veröffentlicht sie automatisch bei Änderungen an `slid
 auf `main`. Eine Veröffentlichung lässt sich auch manuell über die Action
 „Publish slides to GitHub Pages“ starten.
 
+## Veröffentlichte Versionen
+
+Der zusätzliche Workflow „Publish tagged slides to GitHub Pages“ reagiert auf
+das Erstellen oder Aktualisieren von Tags mit dem Präfix `published/`.
+Der Teil nach dem Präfix wird zum URL-Verzeichnis, zum Beispiel:
+
+```sh
+git tag published/2026-10-15-baselone
+git push origin published/2026-10-15-baselone
+```
+
+Diese Version erscheint unter
+**https://www.sippsack.de/java-value-classes/2026-10-15-baselone/**.
+Versionsnamen dürfen Buchstaben, Ziffern, Punkte, Bindestriche und Unterstriche
+enthalten und müssen mit einem Buchstaben oder einer Ziffer beginnen.
+
+Beide Workflows bauen die aktuelle `main`-Version im Hauptverzeichnis und alle
+vorhandenen `published/`-Tags in separaten Unterverzeichnissen. Dadurch entfernt
+ein neues Pages-Deployment keine älteren Versionen. Jede Tag-Version wird aus
+dem jeweiligen Git-Stand einschließlich dessen Lockfile und Bildern gebaut.
+Ein gelöschtes Tag verschwindet bei der nächsten Veröffentlichung auch von der Website.
+
+Bereits bestehende Tags werden beim nächsten Deployment mit veröffentlicht.
+Für Tags, deren Git-Stand den neuen Workflow noch nicht enthält, den Workflow
+manuell auf `main` starten; ein Tag-Push kann nur Workflows auslösen, die im
+getaggten Stand vorhanden sind.
+
 * Folien: [slidev](https://sli.dev/)
 * Demos: Ordner demo/src

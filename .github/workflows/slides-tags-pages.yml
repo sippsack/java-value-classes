@@ -1,0 +1,16 @@
+name: Publish tagged slides to GitHub Pages
+
+on:
+  push:
+    tags:
+      - 'published/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  publish:
+    uses: ./.github/workflows/slides-pages.yml

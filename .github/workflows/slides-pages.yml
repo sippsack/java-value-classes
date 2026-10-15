@@ -6,7 +6,10 @@ on:
     paths:
       - slides/**
       - .github/workflows/slides-pages.yml
+      - .github/workflows/slides-tags-pages.yml
+      - .github/scripts/build-slides-pages.sh
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
@@ -20,6 +23,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -27,15 +33,13 @@ jobs:
           cache-dependency-path: slides/package-lock.json
       - uses: actions/configure-pages@v5
         id: pages
-      - run: npm ci
-        working-directory: slides
+      - run: bash .github/scripts/build-slides-pages.sh
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
-      - run: npm run build -- --base "${{ steps.pages.outputs.base_path }}/"
-        working-directory: slides
+          PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: slides/dist
+          path: pages-dist
 
   deploy:
     needs: build
