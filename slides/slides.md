@@ -191,6 +191,7 @@ layout: default
 </div>
 
 - [sli.dev](https://sli.dev/) Folien im Ordner slides
+  - Live unter [https://sippsack.github.io/java-value-classes/](https://sippsack.github.io/java-value-classes/)
 - Demos im Ordner demo/src
 
 ---
