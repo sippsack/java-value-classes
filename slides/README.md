@@ -18,6 +18,14 @@ npm run export
 
 Der Build liegt in `dist/`, der PDF-Export in `valhalla-now.pdf`.
 
+Die graue Seitenleiste aus der PowerPoint-Vorlage wird über `global-top.vue`
+auf Inhaltsfolien eingeblendet, auch im PDF. Ihr senkrechter Titel kommt aus
+`title` im Frontmatter von `slides.md`; die Nummer folgt der sichtbaren
+Slidev-Folienreihenfolge.
+Auf der ersten Folie ist sie automatisch ausgeblendet. Großformatige Bildfolien
+und Folien mit nicht weißem Hintergrund sind im jeweiligen Frontmatter mit
+`sidebar: false` markiert. Diese Markierung auch für neue entsprechende Folien setzen.
+
 ### Fehler „Cannot find native binding“
 
 Rolldown benötigt ein natives Paket passend zur Architektur des verwendeten
@@ -48,7 +56,7 @@ Der sichtbare Foliensatz umfasst 41 Folien einschließlich Agenda, Sponsoren und
 Kontakt. Ziel sind etwa 38 Minuten Vortrag mit zwei Minuten Puffer innerhalb
 eines 40-Minuten-Slots. Ausformulierter deutscher Sprechtext und Regiehinweise
 stehen in den Slidev-Sprechernotizen und in `../sprechtext-value-classes.md`.
-Die Vorstellung ist mit `hide: true` ausgeblendet, bleibt aber samt Notizen erhalten.
+Abstract und persönliche Vorstellung sind mit `hide: true` ausgeblendet.
 Die offizielle Sponsorenübersicht aus `../input/BaselOne26.pptx` steht an zweiter
 Stelle. Die letzte Folie wirbt für die kostenlosen Architektur-Spicker.
 

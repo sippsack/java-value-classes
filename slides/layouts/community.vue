@@ -25,7 +25,6 @@
         <path d="M800 215 l 4 -14 M800 215 l 15 2" />
       </svg>
     </div>
-    <div class="page-no"><SlideCurrentNo /></div>
   </div>
 </template>
 

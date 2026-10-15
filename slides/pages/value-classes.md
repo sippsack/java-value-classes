@@ -464,6 +464,7 @@ Regie: etwa fünf Sekunden.
 
 ---
 layout: full-image
+sidebar: false
 image: /valhalla/flattening-scalarization-original.png
 title: "Flattening und Scalarization – Walze und Bausteine"
 ---
@@ -482,6 +483,7 @@ Etwa 20 Sekunden, aus dem bisherigen JVM-Zeitbudget.
 
 ---
 layout: full-image
+sidebar: false
 image: /valhalla/flattening-inlining-original.png
 title: "Flattening und Inlining – Dichte und Indirektion"
 ---

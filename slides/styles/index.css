@@ -44,6 +44,19 @@ body,
 }
 
 /* ---------- Standard-Inhaltsfolie (Layout "Nur Titel" / "Titel und Inhalt") ---------- */
+.slidev-layout.talk-abstract {
+  background: radial-gradient(ellipse 350px 250px at 100% -10%, var(--sky) 99%, transparent 100%), #fff;
+  font-size: 18px;
+  line-height: 1.2;
+}
+.slidev-layout.talk-abstract h2 {
+  font-size: 28px;
+  margin-bottom: 14px;
+}
+.slidev-layout.talk-abstract p {
+  margin-bottom: 12px;
+}
+
 .slidev-layout.embarc {
   padding: 150px 57px 24px 57px;
 }
@@ -72,14 +85,6 @@ body,
   width: 157px;
   height: 7.5px;
   background: var(--yellow);
-}
-
-.slidev-layout.embarc .page-no {
-  position: absolute;
-  right: 14px;
-  bottom: 8px;
-  font-size: 14px;
-  color: #aaa;
 }
 
 .slidev-layout h2 {

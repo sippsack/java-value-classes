@@ -1,6 +1,6 @@
 ---
 theme: none
-title: Valhalla Now – Value Classes in Java
+title: Value Classes in Java
 author: Falk Sippach
 canvasWidth: 960
 aspectRatio: 16/9
@@ -46,6 +46,7 @@ Regie: etwa 20 Sekunden. Das Wikinger-Motiv stammt aus der früheren Präsentati
 
 ---
 layout: sponsors
+sidebar: false
 ---
 
 <!--
@@ -53,6 +54,27 @@ Bevor wir einsteigen: Vielen Dank an die Sponsoren und Partner, die die BaselOne
 möglich machen. Hier seht ihr die offizielle Sponsorenübersicht der Konferenz.
 
 Regie: etwa fünf Sekunden. Originalvorlage: input/BaselOne26.pptx.
+-->
+
+---
+layout: default
+class: talk-abstract
+hide: true
+---
+
+# Abstract
+
+## Value Classes – Java bereitet sich auf KI-Workloads vor
+
+Java verdankt seine Stärke seit jeher einem statischen, starken Typsystem. Doch die alte Trennung zwischen primitiven und Referenztypen ist bis heute eine Sollbruchstelle der Sprache: primitive Typen sind schnell und kompakt, integrieren sich aber nur schlecht mit Generics, Collections, Streams und modernen Sprachmitteln. Klassen sind ausdrucksstark, kosten aber oft unnötig Speicher, Indirektion und Performance.
+
+Mit Value Classes will Project Valhalla diese Kluft schließen. Sie erlauben Datentypen ohne eigene Identität, die sich fachlich wie Klassen modellieren lassen, zur Laufzeit aber deutlich näher an primitiven Typen liegen. Das verspricht kompaktere Datenstrukturen, weniger Objekt-Overhead, bessere Datenlokalität und damit genau die Eigenschaften, die auch für numerische und KI-nahe Workloads immer wichtiger werden.
+
+Denn wer mit Embeddings, Vektoren, Matrizen oder großen Mengen kleiner, unveränderlicher Datenstrukturen arbeitet, profitiert besonders von effizientem Speicherlayout und geringerer Indirektion. Gleichzeitig werden fachliche Typen wieder attraktiver: präzise, unveränderbar und trotzdem performant. Der Vortrag zeigt, wohin sich Java mit Value Classes, null-restricted / nullable types und einem vereinheitlichten Typmodell entwickelt und warum das gerade für die Zukunft von Java im Umfeld von AI, Data Processing und High-Performance wichtig wird.
+
+<!--
+Titel und aktueller Abstract aus der README, im Stil der Abstractfolie des alten
+PowerPoint-Foliensatzes. Nur kurz als Einordnung zeigen, nicht vollständig vorlesen.
 -->
 
 ---
@@ -66,7 +88,7 @@ Schwerpunkte sind Architekturberatung und Java-Technologien. Mir ist wichtig,
 Sprachfeatures nicht nur syntaktisch anzuschauen, sondern ihren Nutzen für ein
 verständliches Modell und für den Betrieb einer Anwendung einzuordnen.
 
-Regie: Diese Folie ist vorerst ausgeblendet. Bei Bedarf hide: true entfernen.
+Regie: Kurze persönliche Vorstellung.
 -->
 
 ---
@@ -84,6 +106,7 @@ Regie: höchstens 20 Sekunden. Community-Termin stammt aus der Vorlage; vorab pr
 
 ---
 layout: opening
+sidebar: false
 ---
 
 # Valhalla, when?
@@ -196,6 +219,7 @@ layout: default
 
 ---
 layout: full-image
+sidebar: false
 image: /embarc/s7-1--3x0.png
 hide: true
 ---
@@ -210,6 +234,7 @@ Regie: optionale Rahmenfolie, bei knapper Zeit ohne Pause weitergehen.
 
 ---
 layout: spicker
+sidebar: false
 hide: true
 ---
 
@@ -223,6 +248,7 @@ Regie: höchstens zehn Sekunden oder überspringen.
 
 ---
 layout: spicker
+sidebar: false
 ---
 
 <!--
