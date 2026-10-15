@@ -15,6 +15,13 @@ auf `main`. Eine Veröffentlichung lässt sich auch manuell über die Action
 
 Der zusätzliche Workflow „Publish tagged slides to GitHub Pages“ reagiert auf
 das Erstellen oder Aktualisieren von Tags mit dem Präfix `published/`.
+Build und Deployment laufen nur, wenn sich dabei Dateien unter `slides/`
+ändern. Bei einem verschobenen Tag wird der bisherige Tag-Stand mit dem neuen
+verglichen; bei einem neuen Tag dessen Commit mit seinem ersten Elterncommit
+(beim ersten Commit mit einem leeren Verzeichnisbaum).
+Da GitHub für Tag-Pushes keine Pfadfilter unterstützt, startet dafür lediglich
+ein Prüfjob; bei unveränderten Folien wird die Veröffentlichung übersprungen.
+Manuelle Workflow-Starts bleiben unabhängig vom Änderungsfilter möglich.
 Der Teil nach dem Präfix wird zum URL-Verzeichnis, zum Beispiel:
 
 ```sh

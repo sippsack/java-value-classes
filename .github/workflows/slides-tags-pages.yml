@@ -3,7 +3,7 @@ name: Publish tagged slides to GitHub Pages
 on:
   push:
     tags:
-      - 'published/**'
+      - 'published/*'
   workflow_dispatch:
 
 permissions:
@@ -12,5 +12,47 @@ permissions:
   id-token: write
 
 jobs:
+  changes:
+    if: github.event_name == 'push' && !github.event.deleted
+    runs-on: ubuntu-latest
+    outputs:
+      slides: ${{ steps.changes.outputs.slides }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check changes under slides
+        id: changes
+        env:
+          BEFORE: ${{ github.event.before }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="$(git rev-parse 'HEAD^{commit}')"
+          if [[ -n "$BEFORE" && "$BEFORE" != 0000000000000000000000000000000000000000 ]]; then
+            if ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+              git fetch origin "$BEFORE"
+            fi
+            base="$(git rev-parse "$BEFORE^{commit}")"
+          elif git rev-parse --verify "$target^" >/dev/null 2>&1; then
+            base="$(git rev-parse "$target^")"
+          else
+            base="$(git hash-object -t tree /dev/null)"
+          fi
+
+          if git diff --quiet "$base" "$target" -- slides/; then
+            echo "slides=false" >> "$GITHUB_OUTPUT"
+          else
+            status=$?
+            if [[ "$status" != 1 ]]; then
+              exit "$status"
+            fi
+            echo "slides=true" >> "$GITHUB_OUTPUT"
+          fi
+
   publish:
+    needs: changes
+    if: |
+      always() &&
+      (github.event_name == 'workflow_dispatch' || needs.changes.outputs.slides == 'true')
     uses: ./.github/workflows/slides-pages.yml
