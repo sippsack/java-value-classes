@@ -18,6 +18,118 @@ npm run export
 
 Der Build liegt in `dist/`, der PDF-Export in `valhalla-now.pdf`.
 
+## Lokale Java-Sandbox
+
+`sandbox.md` ist eine separate Demo-Folie; der Hauptvortrag bleibt unverändert.
+Nach `npm ci` starten:
+
+```sh
+npm run sandbox
+```
+
+Standardmäßig gilt `JAVA_HOME`, ansonsten `java` aus `PATH` – damit auch das
+im startenden Terminal mit SDKMAN ausgewählte JDK (zum Beispiel 28-ea).
+Es ist kein JDK-Pfad fest im Code hinterlegt.
+
+Optional lässt sich nur für diese Sandbox ein anderes JDK in `slides/.env.local`
+festlegen (`.env.example` dient als Vorlage):
+
+```dotenv
+JAVA_SANDBOX_HOME=/absoluter/pfad/zum/jdk
+```
+
+Den absoluten JDK-Home-Pfad angeben, nicht dessen `bin`-Verzeichnis; kein `~`
+verwenden. Die lokale Datei ist von Git ausgeschlossen. Danach den Server neu
+starten. Die Reihenfolge ist **JAVA_SANDBOX_HOME > JAVA_HOME > java aus PATH**.
+`JAVA_SANDBOX_HOME` kann alternativ beim Serverstart als Umgebungsvariable gesetzt
+werden und hat dann Vorrang vor dem Dateiwert. Der Pfad bleibt serverseitig und
+wird nicht als Vite-Clientvariable veröffentlicht.
+
+Die Brücke benötigt ein
+vollständiges JDK ab 17 mit `jdk.jshell`; das vorbereitete Value-Class-Beispiel
+braucht zusätzlich einen passenden Valhalla-/Preview-Build. Ein reguläres älteres
+JDK kann gewöhnliche Java-Snippets ausführen, meldet bei `value class` aber
+Compilerfehler. Die tatsächlich verwendete JDK-Version steht nach dem Run oben
+rechts. Preview-Features sind für Compiler und Ausführung aktiviert.
+
+Links Code bearbeiten, mit **Run** oder **Strg/⌘ + Enter** ausführen, rechts Ausgabe
+und Compilerdiagnosen lesen. Beim Beispiel zuerst mit `value` ausführen und dann
+`value` entfernen: Der Vergleich wechselt von `true` zu `false`.
+**Zurücksetzen** stellt den Beispielcode wieder her. Die Komponente kann auch mit
+`<JavaSandbox />` auf einer anderen Folie eingebunden werden.
+
+Der Vite-Dev-Server stellt eine lokale HTTP-Brücke bereit
+(`vite.config.ts`, `sandbox/server.mjs`). Pro Run startet sie eine eigene JVM
+mit `sandbox/SnippetRunner.java` und der JShell-API. Es handelt sich um Java-Snippets,
+nicht um JShell-Kommandos wie `/list`; zwischen Runs bleiben keine Variablen erhalten.
+Nach zehn Sekunden wird der Prozess hart beendet. Anfrage und Ausgabe sind begrenzt.
+Für die lokale Ausführung gibt es keine zusätzlichen Java-Bibliotheken oder
+externen Ausführungsdienste.
+
+**Keine Sicherheits-Sandbox:** Snippets laufen mit den Rechten des lokalen
+Benutzers, einschließlich Datei- und Netzwerkzugriff. Ausschließlich eigenen,
+vertrauenswürdigen Code ausführen. Nur über `127.0.0.1`/`localhost` nutzen,
+nicht per Tunnel, Proxy oder im Netzwerk freigeben. Die Brücke prüft Host,
+Origin und einen eigenen Request-Header und erlaubt kein CORS.
+### dev.java-Fallback mit demselben Editor
+
+GitHub Pages und `slidev build` enthalten kein Java-Backend. Dort wird der externe
+Ausführungsmodus gewählt: Editor, Run und Ausgabe bleiben identisch. Im lokalen
+Betrieb kann über **dev.java-Fallback** ebenfalls gewechselt werden, etwa wenn
+kein passendes JDK installiert ist. **Zur lokalen JVM** wechselt zurück.
+Code und letzte Ausgabe bleiben beim Wechsel erhalten. Erst **Run** sendet Code
+an das ausgewählte Ziel. Compiler- oder JVM-Fehler lösen keine automatische
+Weiterleitung an Dritte aus. Das PDF enthält keine Live-Ausführung.
+
+dev.java erlaubt derzeit keine direkten Cross-Origin-Browseraufrufe seiner
+Ausführungs-API. Daher gibt es einen separat betreibbaren Node-Proxy
+(`sandbox/proxy.mjs`), der ausschließlich an den festgelegten dev.java-Endpunkt
+weiterleitet; er benötigt selbst kein JDK und keine zusätzlichen npm-Pakete.
+Ein Hosting-Ziel ist noch nicht festgelegt. Lokal lässt er sich so ausprobieren:
+
+```sh
+cd slides
+JAVA_SANDBOX_ALLOWED_ORIGINS=http://127.0.0.1:3047 npm run sandbox:proxy
+```
+
+Der Proxy lauscht standardmäßig auf `127.0.0.1:3049`, Endpunkt `/run`.
+`PORT` und `HOST` sind konfigurierbar. `JAVA_SANDBOX_ALLOWED_ORIGINS` ist
+verpflichtend: eine kommaseparierte Liste konkreter Origins, ohne Pfad oder
+abschließenden Slash. Für GitHub Pages etwa `https://www.sippsack.de`.
+Der Proxy liest diese Werte aus seiner Prozessumgebung, nicht aus Vites Env-Dateien.
+
+In `slides/.env.local` die öffentliche Proxy-URL konfigurieren:
+
+```dotenv
+VITE_JAVA_SANDBOX_PROXY_URL=http://127.0.0.1:3049/run
+```
+
+Slidev danach neu starten. Für Pages muss hier eine öffentlich erreichbare
+**HTTPS**-URL stehen, nicht localhost. Alternativ den Wert als Build-Umgebungsvariable
+setzen. Die URL wird beim Build in den Client eingebettet; keine Zugangsdaten
+hineinschreiben. Ohne Konfiguration bleibt Run im externen Modus deaktiviert und
+ein Link zum eigenständigen Playground verfügbar.
+
+Der Proxy begrenzt Anfragen auf 32 KiB, erlaubt nur eine gleichzeitige Ausführung
+und bricht den Aufruf nach 20 Sekunden ab. CORS ist keine Authentifizierung:
+Vor einer öffentlichen Bereitstellung müssen beim Hosting zusätzlich
+Missbrauchsschutz, Rate-Limits und gegebenenfalls Zugangskontrolle vorgesehen
+werden. Keine Code-Inhalte werden vom Proxy geloggt. Die dev.java-API wird vom
+öffentlichen Playground genutzt, ist aber kein zugesicherter stabiler API-Vertrag.
+Ihre Verfügbarkeit, Nutzungsbedingungen und Eignung für den geplanten öffentlichen
+Betrieb müssen vor dem Deployment geklärt werden.
+
+**Run im externen Modus überträgt deinen eingegebenen Code an den Proxy und
+Oracle/dev.java.** Das JDK des Anbieters wird verwendet, nicht das lokal
+konfigurierte JDK; Valhalla-Unterstützung ist nicht garantiert. Netzwerk-,
+Provider- und Formatfehler werden im Ausgabefeld angezeigt.
+
+Die Integrationschecks laufen mit dem jeweils ausgewählten JDK:
+
+```sh
+npm run test:sandbox
+```
+
 Die graue Seitenleiste aus der PowerPoint-Vorlage wird über `global-top.vue`
 auf Inhaltsfolien eingeblendet, auch im PDF. Ihr senkrechter Titel kommt aus
 `title` im Frontmatter von `slides.md`; die Nummer folgt der sichtbaren

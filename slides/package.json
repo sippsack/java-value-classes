@@ -7,6 +7,9 @@
   },
   "scripts": {
     "dev": "slidev --open",
+    "sandbox": "slidev sandbox.md --open",
+    "sandbox:proxy": "node sandbox/proxy.mjs",
+    "test:sandbox": "node --test sandbox/*.test.mjs",
     "build": "slidev build",
     "export": "slidev export --output valhalla-now.pdf"
   },

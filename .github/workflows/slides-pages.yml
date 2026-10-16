@@ -7,6 +7,11 @@ on:
       - slides/**
   workflow_dispatch:
   workflow_call:
+    inputs:
+      experimental-ref:
+        description: Branch to publish under experimental
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -21,7 +26,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
@@ -34,6 +38,8 @@ jobs:
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
           PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          EXPERIMENTAL_REF: ${{ inputs.experimental-ref }}
+          VITE_JAVA_SANDBOX_PROXY_URL: ${{ vars.JAVA_SANDBOX_PROXY_URL }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: pages-dist

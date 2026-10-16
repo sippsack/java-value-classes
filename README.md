@@ -11,6 +11,32 @@ GitHub Actions baut und veröffentlicht sie automatisch bei Änderungen an `slid
 auf `main`. Eine Veröffentlichung lässt sich auch manuell über die Action
 „Publish slides to GitHub Pages“ starten.
 
+## Experimentelle Java-Sandbox
+
+Die Action „Publish experimental slides to GitHub Pages“ veröffentlicht bei
+Änderungen an `slides/` auf `experimental` (beziehungsweise dem app-präfixierten
+Branch `sippsack-experimental`) den experimentellen Foliensatz unter
+**https://www.sippsack.de/java-value-classes/experimental/** und die separate
+Java-Sandbox unter
+**https://www.sippsack.de/java-value-classes/experimental/sandbox/**.
+Hauptfolien aus `main` und `published/`-Versionen werden im selben Deployment
+mitgebaut und bleiben erhalten. Sobald die Workflow- und Build-Skript-Änderungen
+auch in `main` übernommen sind, bleibt die Experimental-Version auch nach späteren
+Main-/Tag-Deployments verfügbar, solange ihr Branch existiert. Bis dahin kann ein
+Deployment mit dem alten Main-Workflow das Experimental-Verzeichnis entfernen. Der
+Tag-Versionsname `experimental` ist deshalb reserviert.
+
+Für die externe Java-Ausführung in Pages unter **Settings → Secrets and variables
+→ Actions → Variables** die Repository-Variable `JAVA_SANDBOX_PROXY_URL` auf die
+öffentliche HTTPS-URL des separat gehosteten Proxys einschließlich `/run` setzen.
+Danach erneut deployen. Ohne Proxy-URL ist die Folie sichtbar, aber externe
+Ausführung deaktiviert. Die Action hostet keinen Java-/Proxy-Server.
+Konfiguration und Betriebsgrenzen stehen in `slides/README.md`.
+
+Falls die Pages-Umgebung nur Deployments von `main` erlaubt, unter **Settings →
+Environments → github-pages** auch den Experimental-Branch zulassen.
+Für automatische Deployments müssen die Änderungen auf GitHub gepusht sein.
+
 ## Veröffentlichte Versionen
 
 Der zusätzliche Workflow „Publish tagged slides to GitHub Pages“ reagiert auf
