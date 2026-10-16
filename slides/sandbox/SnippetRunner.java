@@ -32,12 +32,14 @@ class SnippetRunner {
         boolean success = true;
 
         // The local engine keeps all user threads in this disposable, time-limited JVM.
-        try (var shell = JShell.builder()
+        var builder = JShell.builder()
                 .executionEngine("local")
                 .out(console)
-                .err(console)
-                .compilerOptions("--enable-preview", "--source", String.valueOf(Runtime.version().feature()))
-                .build()) {
+                .err(console);
+        if (args.length == 0 || Boolean.parseBoolean(args[0])) {
+            builder.compilerOptions("--enable-preview", "--source", String.valueOf(Runtime.version().feature()));
+        }
+        try (var shell = builder.build()) {
             var remaining = code;
             while (!remaining.isBlank()) {
                 var completion = shell.sourceCodeAnalysis().analyzeCompletion(remaining);

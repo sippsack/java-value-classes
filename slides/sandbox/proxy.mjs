@@ -1,9 +1,9 @@
 import { createServer } from 'node:http'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { runDevJava } from './devjava.mjs'
+import { runExternal, validateExternal } from './external.mjs'
 
-export function createProxy({ origins, execute = runDevJava, logger = console }) {
+export function createProxy({ origins, execute = runExternal, logger = console }) {
   if (!origins.length || origins.some(origin => {
     try { return new URL(origin).origin !== origin || !/^https?:/.test(origin) }
     catch { return true }
@@ -60,13 +60,18 @@ export function createProxy({ origins, execute = runDevJava, logger = console })
         reply(400, { error: 'Java-Code fehlt.' })
         return
       }
+      try { validateExternal(input) }
+      catch (error) {
+        reply(400, { error: error.message })
+        return
+      }
       if (busy) {
         reply(429, { error: 'Proxy ist beschäftigt. Bitte kurz warten.' })
         return
       }
       busy = true
       try {
-        reply(200, await execute(input.code))
+        reply(200, await execute(input.code, { provider: input.provider, preview: input.preview }))
       }
       finally {
         busy = false

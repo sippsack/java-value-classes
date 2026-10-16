@@ -51,6 +51,14 @@ Für die externe Java-Ausführung in Pages unter **Settings → Secrets and vari
 Danach erneut deployen. Ohne Proxy-URL ist die Folie sichtbar, aber externe
 Ausführung deaktiviert. Die Action hostet keinen Java-/Proxy-Server.
 Konfiguration und Betriebsgrenzen stehen in `slides/README.md`.
+Die Sandbox bietet vorbereitete Code-Zwischenstände über **0, 1, 2, …**, eine
+lokale JDK-Auswahl (höchste erkannte Version vorausgewählt) und einen
+**--enable-preview**-Schalter. JDK-Pfade werden beim Dev-Server-Start automatisch
+in `slides/.env.local` gespeichert. Externe Anbieter werden über
+`VITE_JAVA_SANDBOX_PROVIDERS` konfiguriert; unterstützt sind dev.java und
+Java Almanac mit JDK 28. In GitHub Actions kann dafür die Repository-Variable
+`JAVA_SANDBOX_PROVIDERS` gesetzt werden. Details und Props für Zwischenstände
+stehen ebenfalls in `slides/README.md`.
 Eine Cloudflare-Workers-Implementierung einschließlich Registrierungs- und
 Deployment-Anleitung liegt in [`dev.java-proxy/`](dev.java-proxy/README.md).
 

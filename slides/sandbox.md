@@ -13,7 +13,11 @@ sidebar: false
 
 # Value Classes live ausprobieren
 
-<JavaSandbox />
+<JavaSandbox :checkpoints="[
+  'class Rgb { final int red; Rgb(int red) { this.red = red; } }\nvar a = new Rgb(255);\nvar b = new Rgb(255);\nSystem.out.println(a == b);',
+  'value class Rgb { final int red; Rgb(int red) { this.red = red; } }\nvar a = new Rgb(255);\nvar b = new Rgb(255);\nSystem.out.println(a == b);',
+  'System.out.println(System.getProperty(&quot;java.version&quot;));'
+]" />
 
 <!--
 Start mit npm run sandbox im Verzeichnis slides/.

@@ -2,6 +2,7 @@ import { execFile, spawn } from 'node:child_process'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
+import { runExternal, validateExternal } from './external.mjs'
 
 const execFileAsync = promisify(execFile)
 const worker = fileURLToPath(new URL('./SnippetRunner.java', import.meta.url))
@@ -9,7 +10,7 @@ const maxCodeBytes = 32 * 1024
 const maxOutputBytes = 128 * 1024
 const timeoutMs = 10_000
 
-export async function runJava(code, javaHome = process.env.JAVA_HOME) {
+export async function runJava(code, javaHome = process.env.JAVA_HOME, preview = true) {
   const java = javaHome ? join(javaHome, 'bin', 'java') : 'java'
   const { stdout } = await execFileAsync(java, ['--version'], { timeout: 3000 })
   const feature = Number(stdout.match(/^(?:openjdk|java) (\d+)/m)?.[1])
@@ -20,8 +21,8 @@ export async function runJava(code, javaHome = process.env.JAVA_HOME) {
   return new Promise((resolve, reject) => {
     const child = spawn(java, [
       '-Xmx128m',
-      '--enable-preview', '--source', String(feature),
-      '--add-modules', 'jdk.jshell', worker,
+      ...(preview ? ['--enable-preview'] : []), '--source', String(feature),
+      '--add-modules', 'jdk.jshell', worker, String(preview),
     ], { stdio: ['pipe', 'pipe', 'pipe'] })
     let output = ''
     let errors = ''
@@ -74,12 +75,12 @@ export async function runJava(code, javaHome = process.env.JAVA_HOME) {
   })
 }
 
-export function javaSandbox({ javaHome } = {}) {
+export function javaSandbox({ javaHome, jdks, executeExternal = runExternal } = {}) {
   let busy = false
   return {
     name: 'local-java-sandbox',
     configureServer(server) {
-      server.middlewares.use('/__java-sandbox/run', async (req, res) => {
+      server.middlewares.use('/__java-sandbox', async (req, res) => {
         const reply = (status, body) => {
           res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' })
           res.end(JSON.stringify(body))
@@ -94,6 +95,15 @@ export function javaSandbox({ javaHome } = {}) {
         }
         if (req.method !== 'POST' || req.headers['content-type'] !== 'application/json') {
           reply(400, { error: 'POST mit Content-Type application/json erwartet.' })
+          return
+        }
+        if (req.url === '/jdks') {
+          reply(200, { jdks: jdks || [], defaultHome: jdks?.[0]?.home || '' })
+          return
+        }
+        const external = req.url === '/external'
+        if (req.url !== '/run' && !external) {
+          reply(404, { error: 'Unbekannter Endpunkt.' })
           return
         }
         let body = ''
@@ -120,13 +130,30 @@ export function javaSandbox({ javaHome } = {}) {
             reply(400, { error: 'Java-Code fehlt.' })
             return
           }
+          if (input.preview !== undefined && typeof input.preview !== 'boolean') {
+            reply(400, { error: 'preview muss ein Boolean sein.' })
+            return
+          }
+          if (!external && input.jdk !== undefined && !jdks?.some(jdk => jdk.home === input.jdk)) {
+            reply(400, { error: 'Unbekanntes JDK. Server neu starten, um Installationen zu erkennen.' })
+            return
+          }
+          if (external) {
+            try { validateExternal(input) }
+            catch (error) {
+              reply(400, { error: error.message })
+              return
+            }
+          }
           if (busy) {
             reply(409, { error: 'Es läuft bereits ein Java-Snippet. Bitte kurz warten.' })
             return
           }
           busy = true
           try {
-            reply(200, await runJava(input.code, javaHome || process.env.JAVA_HOME))
+            reply(200, external
+              ? await executeExternal(input.code, { provider: input.provider, preview: input.preview })
+              : await runJava(input.code, input.jdk || javaHome || jdks?.[0]?.home || process.env.JAVA_HOME, input.preview ?? true))
           }
           finally {
             busy = false

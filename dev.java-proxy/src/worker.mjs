@@ -1,4 +1,4 @@
-import { runDevJava } from '../../slides/sandbox/devjava.mjs'
+import { runExternal, validateExternal } from '../../slides/sandbox/external.mjs'
 
 class BodyLimitError extends Error {}
 
@@ -37,7 +37,7 @@ async function boundedFetch(url, options) {
   return new Response(body, { status: response.status, headers: response.headers })
 }
 
-export function createHandler(execute = code => runDevJava(code, boundedFetch)) {
+export function createHandler(execute = (code, options) => runExternal(code, options, boundedFetch)) {
   return async (request, env) => {
     const origin = request.headers.get('Origin')
     const origins = (env.ALLOWED_ORIGINS || '').split(',').map(value => value.trim()).filter(Boolean)
@@ -80,13 +80,15 @@ export function createHandler(execute = code => runDevJava(code, boundedFetch)) 
       if (typeof input?.code !== 'string' || !input.code.trim()) {
         return reply(400, { error: 'Java-Code fehlt.' })
       }
-      return reply(200, await execute(input.code))
+      try { validateExternal(input) }
+      catch (error) { return reply(400, { error: error.message }) }
+      return reply(200, await execute(input.code, { provider: input.provider, preview: input.preview }))
     }
     catch (error) {
       if (error instanceof BodyLimitError) return reply(413, { error: error.message })
       // Never log submitted code or the provider's response body.
-      console.error('dev.java-Ausführung fehlgeschlagen:', error.name)
-      return reply(502, { error: 'dev.java nicht erreichbar, Zeitlimit überschritten oder ungültige Provider-Antwort.' })
+      console.error('Externe Java-Ausführung fehlgeschlagen:', error.name)
+      return reply(502, { error: 'Externe Sandbox nicht erreichbar, Zeitlimit überschritten oder ungültige Provider-Antwort.' })
     }
   }
 }

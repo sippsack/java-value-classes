@@ -27,36 +27,58 @@ Nach `npm ci` starten:
 npm run sandbox
 ```
 
-Standardmäßig gilt `JAVA_HOME`, ansonsten `java` aus `PATH` – damit auch das
-im startenden Terminal mit SDKMAN ausgewählte JDK (zum Beispiel 28-ea).
-Es ist kein JDK-Pfad fest im Code hinterlegt.
+Beim Start des Dev-Servers werden lokale JDKs ab Java 17 mit `jdk.jshell`
+gesucht: SDKMAN, die üblichen macOS-/Linux-/Windows-Java-Verzeichnisse,
+Homebrew sowie `JAVA_HOME`, `JAVA_SANDBOX_HOME` und `java` aus `PATH`.
+Es erfolgt keine Volltextsuche über die Festplatte. Symlinks werden aufgelöst,
+doppelte Installationen zusammengefasst und Versionen numerisch absteigend
+sortiert. **Das höchste gefundene JDK ist vorausgewählt**; über die Auswahlliste
+kann jederzeit auf eine andere Installation gewechselt werden.
 
-Optional lässt sich nur für diese Sandbox ein anderes JDK in `slides/.env.local`
-festlegen (`.env.example` dient als Vorlage):
+Die erkannten absoluten JDK-Home-Pfade werden automatisch in der Git-ignorierten
+Datei `slides/.env.local` unter `JAVA_SANDBOX_JDKS` gespeichert. Bestehende andere
+Einstellungen bleiben erhalten. Zusätzliche Installationen außerhalb der
+Standardverzeichnisse können dort eingetragen werden (`.env.example` als Vorlage):
 
 ```dotenv
-JAVA_SANDBOX_HOME=/absoluter/pfad/zum/jdk
+JAVA_SANDBOX_JDKS='["/absoluter/pfad/zum/jdk","/weiteres/jdk"]'
 ```
 
 Den absoluten JDK-Home-Pfad angeben, nicht dessen `bin`-Verzeichnis; kein `~`
 verwenden. Die lokale Datei ist von Git ausgeschlossen. Danach den Server neu
-starten. Die Reihenfolge ist **JAVA_SANDBOX_HOME > JAVA_HOME > java aus PATH**.
-`JAVA_SANDBOX_HOME` kann alternativ beim Serverstart als Umgebungsvariable gesetzt
-werden und hat dann Vorrang vor dem Dateiwert. Der Pfad bleibt serverseitig und
-wird nicht als Vite-Clientvariable veröffentlicht.
+starten. `JAVA_SANDBOX_HOME` bleibt als zusätzlicher Suchpfad unterstützt,
+erzwingt aber nicht mehr die Vorauswahl: Diese folgt immer der höchsten Version.
+Nicht mehr vorhandene oder ungeeignete Installationen werden aus der Liste
+entfernt. Die Pfade werden nur an den lokalen Browser ausgeliefert, nicht in
+den statischen Build eingebettet. Die JDK-Suche und das Schreiben der Datei
+finden nur im Dev-Server statt, nicht im Pages-Build.
 
 Die Brücke benötigt ein
 vollständiges JDK ab 17 mit `jdk.jshell`; das vorbereitete Value-Class-Beispiel
 braucht zusätzlich einen passenden Valhalla-/Preview-Build. Ein reguläres älteres
 JDK kann gewöhnliche Java-Snippets ausführen, meldet bei `value class` aber
 Compilerfehler. Die tatsächlich verwendete JDK-Version steht nach dem Run oben
-rechts. Preview-Features sind für Compiler und Ausführung aktiviert.
+in der Ausgabezeile. **--enable-preview** ist standardmäßig angehakt; Abschalten
+wirkt sowohl auf den JShell-Compiler als auch auf die Ausführungs-JVM.
 
 Links Code bearbeiten, mit **Run** oder **Strg/⌘ + Enter** ausführen, rechts Ausgabe
 und Compilerdiagnosen lesen. Beim Beispiel zuerst mit `value` ausführen und dann
 `value` entfernen: Der Vergleich wechselt von `true` zu `false`.
-**Zurücksetzen** stellt den Beispielcode wieder her. Die Komponente kann auch mit
-`<JavaSandbox />` auf einer anderen Folie eingebunden werden.
+Der kompakte **Run**-Button wird von den Buttons **0, 1, 2, …** gefolgt.
+**0** stellt immer den Ausgangscode wieder her; weitere Buttons laden die
+jeweiligen vorbereiteten Zwischenstände. Wechsel überschreiben lokale Änderungen
+im Editor bewusst mit dem vorbereiteten Code, führen ihn aber nicht automatisch
+aus. Die Demo-Folie enthält drei solche Zwischenstände. Pro Folie konfigurieren:
+
+```vue
+<JavaSandbox
+  initial-code="System.out.println(0);"
+  :checkpoints="['System.out.println(1);', 'System.out.println(2);']"
+/>
+```
+
+Ohne Props bleibt das Rgb-Beispiel der Ausgangscode. Ein Overlay zum Übernehmen
+anderer Folien-Codeblöcke gehört noch nicht zum Funktionsumfang.
 
 Der Vite-Dev-Server stellt eine lokale HTTP-Brücke bereit
 (`vite.config.ts`, `sandbox/server.mjs`). Pro Run startet sie eine eigene JVM
@@ -71,21 +93,27 @@ Benutzers, einschließlich Datei- und Netzwerkzugriff. Ausschließlich eigenen,
 vertrauenswürdigen Code ausführen. Nur über `127.0.0.1`/`localhost` nutzen,
 nicht per Tunnel, Proxy oder im Netzwerk freigeben. Die Brücke prüft Host,
 Origin und einen eigenen Request-Header und erlaubt kein CORS.
-### dev.java-Fallback mit demselben Editor
+### Mehrere externe Sandboxen mit demselben Editor
 
 GitHub Pages und `slidev build` enthalten kein Java-Backend. Dort wird der externe
 Ausführungsmodus gewählt: Editor, Run und Ausgabe bleiben identisch. Im lokalen
-Betrieb kann über **dev.java-Fallback** ebenfalls gewechselt werden, etwa wenn
-kein passendes JDK installiert ist. **Zur lokalen JVM** wechselt zurück.
+Betrieb enthält dieselbe Zielauswahl lokale JDKs und externe Anbieter.
 Code und letzte Ausgabe bleiben beim Wechsel erhalten. Erst **Run** sendet Code
 an das ausgewählte Ziel. Compiler- oder JVM-Fehler lösen keine automatische
 Weiterleitung an Dritte aus. Das PDF enthält keine Live-Ausführung.
 
 dev.java erlaubt derzeit keine direkten Cross-Origin-Browseraufrufe seiner
 Ausführungs-API. Daher gibt es einen separat betreibbaren Node-Proxy
-(`sandbox/proxy.mjs`), der ausschließlich an den festgelegten dev.java-Endpunkt
+(`sandbox/proxy.mjs`), der ausschließlich an die festgelegten Anbieter-Endpunkte
 weiterleitet; er benötigt selbst kein JDK und keine zusätzlichen npm-Pakete.
-Ein Hosting-Ziel ist noch nicht festgelegt. Lokal lässt er sich so ausprobieren:
+Die Cloudflare-Variante liegt in `../dev.java-proxy/`. Lokal lässt er sich so ausprobieren:
+
+Im Slidev-Dev-Server werden externe Aufrufe automatisch über die geschützte
+gleichursprüngliche Route `/__java-sandbox/external` weitergeleitet. Das funktioniert
+sowohl mit `localhost` als auch mit `127.0.0.1`; ein zusätzlicher Proxy-Prozess und
+eine Proxy-URL sind dafür nicht nötig. Die konfigurierte Proxy-URL gilt nur für
+den statischen Build. Der folgende eigenständige Node-Proxy ist optional, etwa
+zum Testen statischer Builds:
 
 ```sh
 cd slides
@@ -102,7 +130,26 @@ In `slides/.env.local` die öffentliche Proxy-URL konfigurieren:
 
 ```dotenv
 VITE_JAVA_SANDBOX_PROXY_URL=http://127.0.0.1:3049/run
+VITE_JAVA_SANDBOX_PROVIDERS='[{"label":"dev.java","url":"https://dev.java/playground/"},{"label":"Java Almanac 28","url":"https://javaalmanac.io/jdk/28/"}]'
 ```
+
+Ohne `VITE_JAVA_SANDBOX_PROVIDERS` werden genau diese beiden Anbieter angeboten.
+Reihenfolge und Auswahl sind über das JSON-Array konfigurierbar; optional kann
+jeder Eintrag eine eigene `proxyUrl` erhalten, ansonsten gilt die gemeinsame
+Proxy-URL. Die Seiten-URL in `url` ist die Anbieterkennung, nicht der API-Endpunkt.
+Beliebige URLs werden vom Proxy bewusst nicht aufgerufen. Neue Anbieter brauchen
+einen expliziten Adapter; dadurch bleibt der Proxy kein offener URL-Forwarder.
+Im statischen Build ist der erste konfigurierte Anbieter vorausgewählt.
+Für CI kann `VITE_JAVA_SANDBOX_PROVIDERS` als Build-Umgebungsvariable gesetzt werden.
+
+dev.java hat Preview fest aktiviert: Dort ist die Checkbox angehakt und
+deaktiviert, mit entsprechendem Hinweis. Java Almanac 28 unterstützt beide
+Einstellungen. Dort werden Snippets in `Sandbox.main` eingebettet und
+einzeilige Imports vorangestellt. Ausdrücke brauchen `System.out.println`;
+vollständige Quelldateien, Pakete, JShell-Kommandos und beliebige Top-Level-
+Deklarationen werden nicht als JShell-Eingabe interpretiert. Klassen im Beispiel
+werden lokale Klassen in `main`. Compilerdiagnosen beziehen sich auf die erzeugte
+Quelldatei, nicht exakt auf die Editorzeilen.
 
 Slidev danach neu starten. Für Pages muss hier eine öffentlich erreichbare
 **HTTPS**-URL stehen, nicht localhost. Alternativ den Wert als Build-Umgebungsvariable
@@ -120,7 +167,7 @@ Ihre Verfügbarkeit, Nutzungsbedingungen und Eignung für den geplanten öffentl
 Betrieb müssen vor dem Deployment geklärt werden.
 
 **Run im externen Modus überträgt deinen eingegebenen Code an den Proxy und
-Oracle/dev.java.** Das JDK des Anbieters wird verwendet, nicht das lokal
+den ausgewählten Anbieter (Oracle/dev.java oder Java Almanac).** Das JDK des Anbieters wird verwendet, nicht das lokal
 konfigurierte JDK; Valhalla-Unterstützung ist nicht garantiert. Netzwerk-,
 Provider- und Formatfehler werden im Ausgabefeld angezeigt.
 

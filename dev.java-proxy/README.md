@@ -1,9 +1,14 @@
 # dev.java-Proxy auf Cloudflare Workers
 
 Serverless-HTTP-Proxy für die Java-Sandbox in den GitHub-Pages-Folien.
-Der Worker hat kein JDK: Er leitet Code an den festen dev.java-Endpunkt weiter
+Der Worker hat kein JDK: Er leitet Code an feste dev.java-/Java-Almanac-Endpunkte weiter
 und liefert dieselbe JSON-Antwortform wie die lokale Java-Brücke.
-Die Provider-Anbindung wird mit `slides/sandbox/devjava.mjs` geteilt.
+Die Provider-Anbindung wird mit `slides/sandbox/external.mjs` und
+`slides/sandbox/devjava.mjs` geteilt. `POST /run` akzeptiert `code`, optional
+`provider` (eine der beiden unterstützten Seiten-URLs) und `preview` (Boolean).
+Ohne Anbieter bleibt dev.java der Standard für ältere Clients. dev.java erzwingt
+Preview; `preview: false` liefert dort explizit HTTP 400. Java Almanac 28 unterstützt
+beide Einstellungen und führt in `main` eingebettete Snippets aus.
 
 Produktionsendpunkt:
 **https://java-value-classes-devjava-proxy.falk-2c1.workers.dev/run**

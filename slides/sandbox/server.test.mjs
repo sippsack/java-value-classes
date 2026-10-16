@@ -48,7 +48,10 @@ test('HTTP bridge blocks foreign origins and validates requests', async () => {
     config: { server: {}, logger: { error() {} } },
     middlewares: { use(_path, handler) { middleware = handler } },
   })
-  const server = createServer((req, res) => middleware(req, res))
+  const server = createServer((req, res) => {
+    req.url = req.url.replace('/__java-sandbox', '')
+    middleware(req, res)
+  })
   server.listen(0, '127.0.0.1')
   await once(server, 'listening')
   const base = `http://127.0.0.1:${server.address().port}`
@@ -73,10 +76,91 @@ test('HTTP bridge blocks foreign origins and validates requests', async () => {
     assert.equal((await request('{')).status, 400)
     assert.equal((await request('null')).status, 400)
     assert.equal((await request('{"code":"  "}')).status, 400)
+    assert.equal((await request('{"code":"42","jdk":"/untrusted/path"}')).status, 400)
+    assert.equal((await request('{"code":"42","preview":"false"}')).status, 400)
     assert.equal((await request('x'.repeat(33 * 1024))).status, 413)
     const response = await request(JSON.stringify({ code: 'System.out.println(6 * 7);' }))
     assert.equal(response.status, 200)
     assert.match((await response.json()).output, /42/)
+  }
+  finally {
+    server.closeAllConnections()
+    await new Promise(resolve => server.close(resolve))
+  }
+})
+
+test('preview is disabled in both compiler and execution JVM', async () => {
+  const result = await runJava('System.out.println("no preview");', undefined, false)
+  assert.equal(result.ok, true)
+  assert.match(result.output, /no preview/)
+  const flagsCode = 'System.out.println(java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments());'
+  assert.doesNotMatch((await runJava(flagsCode, undefined, false)).output, /--enable-preview/)
+  assert.match((await runJava(flagsCode, undefined, true)).output, /--enable-preview/)
+  const previewCode = 'value class PreviewValue { final int x = 1; }'
+  const enabled = await runJava(previewCode)
+  if (enabled.ok) assert.equal((await runJava(previewCode, undefined, false)).ok, false)
+})
+
+test('JDK inventory exposes sorted choices without allowing arbitrary execution paths', async () => {
+  let handler
+  const jdks = [{ home: '/jdk-28', version: '28-ea+17' }, { home: '/jdk-21', version: '21.0.6' }]
+  javaSandbox({ jdks }).configureServer({
+    config: { server: {}, logger: { error() {} } },
+    middlewares: { use(_path, middleware) { handler = middleware } },
+  })
+
+  await test('same-origin external route forwards provider and preview and rejects foreign origins', async () => {
+    let handler
+    let calls = 0
+    javaSandbox({
+      executeExternal: async (code, options) => {
+        calls++
+        assert.equal(code, 'System.out.println(42);')
+        assert.deepEqual(options, { provider: 'https://javaalmanac.io/jdk/28/', preview: false })
+        return { ok: true, output: '42', runtime: 'Almanac' }
+      },
+    }).configureServer({
+      config: { server: {}, logger: { error() {} } },
+      middlewares: { use(_path, middleware) { handler = middleware } },
+    })
+    const server = createServer(handler)
+    server.listen(0, '127.0.0.1')
+    await once(server, 'listening')
+    const origin = `http://127.0.0.1:${server.address().port}`
+    const headers = { Origin: origin, 'Content-Type': 'application/json', 'X-Java-Sandbox': '1' }
+    const body = JSON.stringify({ code: 'System.out.println(42);', provider: 'https://javaalmanac.io/jdk/28/', preview: false })
+    try {
+      const response = await fetch(`${origin}/external`, { method: 'POST', headers, body })
+      assert.equal(response.status, 200)
+      assert.equal((await response.json()).output, '42')
+      const foreign = await fetch(`${origin}/external`, {
+        method: 'POST', headers: { ...headers, Origin: 'https://foreign.example' }, body,
+      })
+      assert.equal(foreign.status, 403)
+      assert.equal(calls, 1)
+      const invalid = await fetch(`${origin}/external`, {
+        method: 'POST', headers, body: JSON.stringify({ code: '42', provider: 'https://unknown.example' }),
+      })
+      assert.equal(invalid.status, 400)
+      assert.equal(calls, 1)
+    }
+    finally {
+      server.closeAllConnections()
+      await new Promise(resolve => server.close(resolve))
+    }
+  })
+  const server = createServer(handler)
+  server.listen(0, '127.0.0.1')
+  await once(server, 'listening')
+  const origin = `http://127.0.0.1:${server.address().port}`
+  try {
+    const result = await fetch(`${origin}/jdks`, {
+      method: 'POST',
+      headers: { Origin: origin, 'Content-Type': 'application/json', 'X-Java-Sandbox': '1' },
+      body: '{}',
+    })
+    assert.equal(result.status, 200)
+    assert.deepEqual(await result.json(), { jdks, defaultHome: '/jdk-28' })
   }
   finally {
     server.closeAllConnections()

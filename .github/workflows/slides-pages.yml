@@ -36,6 +36,7 @@ jobs:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
           PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
           VITE_JAVA_SANDBOX_PROXY_URL: ${{ vars.JAVA_SANDBOX_PROXY_URL }}
+          VITE_JAVA_SANDBOX_PROVIDERS: ${{ vars.JAVA_SANDBOX_PROVIDERS }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: pages-dist

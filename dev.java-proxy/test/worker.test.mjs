@@ -47,3 +47,16 @@ test('rate limits and upstream errors remain visible to the client', async () =>
   assert.equal(response.status, 502)
   assert.equal(response.headers.get('Access-Control-Allow-Origin'), origin)
 })
+
+test('provider and preview reach the adapter; unsupported destinations and flags are rejected', async () => {
+  const handler = createHandler(async (code, options) => {
+    assert.equal(code, 'System.out.println(42);')
+    assert.equal(options.provider, 'https://javaalmanac.io/jdk/28/')
+    assert.equal(options.preview, false)
+    return { ok: true, runtime: 'Almanac', output: '42' }
+  })
+  const input = { code: 'System.out.println(42);', provider: 'https://javaalmanac.io/jdk/28/', preview: false }
+  assert.equal((await handler(request(JSON.stringify(input)), env)).status, 200)
+  assert.equal((await handler(request(JSON.stringify({ ...input, provider: 'https://example.com' })), env)).status, 400)
+  assert.equal((await handler(request(JSON.stringify({ ...input, provider: 'https://dev.java/playground/' })), env)).status, 400)
+})
