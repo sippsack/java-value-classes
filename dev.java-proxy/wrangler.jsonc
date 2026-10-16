@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "java-value-classes-devjava-proxy",
+  "main": "src/worker.mjs",
+  "compatibility_date": "2026-10-16",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": false,
+  "vars": {
+    "ALLOWED_ORIGINS": "https://www.sippsack.de,https://sippsack.github.io"
+  },
+  "ratelimits": [
+    {
+      "name": "PER_IP",
+      "namespace_id": "40101",
+      "simple": { "limit": 10, "period": 60 }
+    },
+    {
+      "name": "TOTAL",
+      "namespace_id": "40102",
+      "simple": { "limit": 60, "period": 60 }
+    }
+  ]
+}

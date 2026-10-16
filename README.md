@@ -51,6 +51,8 @@ Für die externe Java-Ausführung in Pages unter **Settings → Secrets and vari
 Danach erneut deployen. Ohne Proxy-URL ist die Folie sichtbar, aber externe
 Ausführung deaktiviert. Die Action hostet keinen Java-/Proxy-Server.
 Konfiguration und Betriebsgrenzen stehen in `slides/README.md`.
+Eine Cloudflare-Workers-Implementierung einschließlich Registrierungs- und
+Deployment-Anleitung liegt in [`dev.java-proxy/`](dev.java-proxy/README.md).
 
 Im Proxy muss als erlaubter Origin `https://sippsack.github.io` eingetragen sein
 (bei Nutzung einer eigenen Domain zusätzlich deren Origin).
