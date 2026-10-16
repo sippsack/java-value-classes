@@ -26,6 +26,10 @@ while IFS= read -r tag; do
     echo "::error::Invalid version path for tag: $tag (use letters, digits, dots, hyphens or underscores)"
     exit 1
   fi
+  if [[ "$version" == experimental ]]; then
+    echo "::error::The experimental path is reserved for experimental branches"
+    exit 1
+  fi
   if [[ -e "$output/$version" ]]; then
     echo "::error::Version path conflicts with an existing build entry: $version"
     exit 1
@@ -43,35 +47,33 @@ while IFS= read -r tag; do
   echo "::endgroup::"
 done < <(git tag --list 'published/*' --sort=refname)
 
-experimental_ref="${EXPERIMENTAL_REF:-}"
-if [[ -z "$experimental_ref" ]]; then
-  for candidate in experimental sippsack-experimental; do
-    if git show-ref --verify --quiet "refs/remotes/origin/$candidate"; then
-      experimental_ref="$candidate"
-      break
-    fi
-  done
-fi
-
-if [[ -n "$experimental_ref" ]]; then
-  if [[ "$experimental_ref" != experimental && "$experimental_ref" != sippsack-experimental ]]; then
-    echo "::error::Experimental deployment requires experimental or sippsack-experimental"
+while IFS= read -r ref; do
+  version="${ref#refs/remotes/origin/experimental/}"
+  if [[ ! "$version" =~ ^[a-zA-Z0-9][a-zA-Z0-9._-]*(/[a-zA-Z0-9][a-zA-Z0-9._-]*)*$ ]]; then
+    echo "::error::Invalid experimental branch path: $version"
     exit 1
   fi
-  if [[ -e "$output/experimental" ]]; then
-    echo "::error::The experimental path is reserved; rename the conflicting published tag"
+  target="$output/experimental/$version"
+  if [[ -e "$target" ]]; then
+    echo "::error::Experimental branch path conflicts with an existing build entry: $version"
     exit 1
   fi
-  echo "::group::Building $experimental_ref"
-  source="$temporary/experimental"
+  echo "::group::Building experimental/$version"
+  source="$temporary/branches/$version"
   mkdir -p "$source"
-  git archive "refs/remotes/origin/$experimental_ref" slides | tar -x -C "$source"
+  git archive "$ref" slides | tar -x -C "$source"
   (
     cd "$source/slides"
     npm ci
-    npm run build -- --base "$base/experimental/" --out "$output/experimental"
-    npx --no-install slidev build sandbox.md \
-      --base "$base/experimental/sandbox/" --out "$output/experimental/sandbox"
+    npm run build -- --base "$base/experimental/$version/" --out "$target"
+    if [[ -f sandbox.md ]]; then
+      if [[ -e "$target/sandbox" ]]; then
+        echo "::error::Sandbox path conflicts with an existing build entry: experimental/$version/sandbox"
+        exit 1
+      fi
+      npx --no-install slidev build sandbox.md \
+        --base "$base/experimental/$version/sandbox/" --out "$target/sandbox"
+    fi
   )
   echo "::endgroup::"
-fi
+done < <(git for-each-ref --format='%(refname)' --sort=refname refs/remotes/origin/experimental/)

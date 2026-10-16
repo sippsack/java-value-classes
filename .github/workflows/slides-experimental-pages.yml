@@ -2,12 +2,7 @@ name: Publish experimental slides to GitHub Pages
 
 on:
   push:
-    branches: [experimental, sippsack-experimental]
-    paths:
-      - slides/**
-      - .github/scripts/build-slides-pages.sh
-      - .github/workflows/slides-pages.yml
-      - .github/workflows/slides-experimental-pages.yml
+    branches: ['experimental/**']
   workflow_dispatch:
 
 permissions:
@@ -17,6 +12,5 @@ permissions:
 
 jobs:
   publish:
+    if: startsWith(github.ref, 'refs/heads/experimental/') && !github.event.deleted
     uses: ./.github/workflows/slides-pages.yml
-    with:
-      experimental-ref: ${{ github.ref_name }}

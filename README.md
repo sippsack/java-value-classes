@@ -11,20 +11,39 @@ GitHub Actions baut und veröffentlicht sie automatisch bei Änderungen an `slid
 auf `main`. Eine Veröffentlichung lässt sich auch manuell über die Action
 „Publish slides to GitHub Pages“ starten.
 
-## Experimentelle Java-Sandbox
+## Experimentelle Branches auf GitHub Pages
 
-Die Action „Publish experimental slides to GitHub Pages“ veröffentlicht bei
-Änderungen an `slides/` auf `experimental` (beziehungsweise dem app-präfixierten
-Branch `sippsack-experimental`) den experimentellen Foliensatz unter
-**https://www.sippsack.de/java-value-classes/experimental/** und die separate
-Java-Sandbox unter
-**https://www.sippsack.de/java-value-classes/experimental/sandbox/**.
-Hauptfolien aus `main` und `published/`-Versionen werden im selben Deployment
-mitgebaut und bleiben erhalten. Sobald die Workflow- und Build-Skript-Änderungen
-auch in `main` übernommen sind, bleibt die Experimental-Version auch nach späteren
-Main-/Tag-Deployments verfügbar, solange ihr Branch existiert. Bis dahin kann ein
-Deployment mit dem alten Main-Workflow das Experimental-Verzeichnis entfernen. Der
-Tag-Versionsname `experimental` ist deshalb reserviert.
+Die Action „Publish experimental slides to GitHub Pages“ baut und veröffentlicht
+bei **jedem Push auf einen Branch mit dem Präfix `experimental/`**, unabhängig von
+den geänderten Dateien. Sie lässt sich auch manuell auf einem solchen Branch
+starten. Der Teil hinter `experimental/` bestimmt den URL-Pfad:
+
+| Branch | Veröffentlichung |
+| --- | --- |
+| `experimental/java-sandbox` | https://sippsack.github.io/java-value-classes/experimental/java-sandbox/ |
+| `experimental/neue-demo` | https://sippsack.github.io/java-value-classes/experimental/neue-demo/ |
+
+Die separate Java-Sandbox (`slides/sandbox.md`) wird, sofern im jeweiligen Branch
+vorhanden, zusätzlich unter `sandbox/` veröffentlicht:
+**https://sippsack.github.io/java-value-classes/experimental/java-sandbox/sandbox/**.
+Der Remote-Branch für diese Demo heißt `experimental/java-sandbox` (zuvor
+`sippsack-java-sandbox`).
+
+Jedes Deployment baut die Hauptfolien aus `main`, alle `published/`-Tags und
+**alle vorhandenen `experimental/`-Branches** aus ihrem jeweiligen Git-Stand samt
+Lockfile. Damit überschreibt ein Experiment nicht die anderen Veröffentlichungen.
+Gelöschte Experimental-Branches verschwinden beim nächsten Deployment.
+Branch-Pfadsegmente dürfen Buchstaben, Ziffern, Punkte, Bindestriche und
+Unterstriche enthalten und müssen mit einem Buchstaben oder einer Ziffer beginnen.
+Weitere Schrägstriche werden als Unterverzeichnisse übernommen; Konflikte mit
+vorhandenen Build-Dateien oder `sandbox/` brechen den Build explizit ab.
+Der Tag-Versionsname `experimental` ist für dieses Verzeichnis reserviert.
+
+Die Workflow-Dateien müssen im gepushten Experimental-Branch vorhanden sein.
+Damit auch Main-/Tag-Deployments die Experimente erhalten, müssen die Workflow-
+und Build-Skript-Änderungen zusätzlich in `main` übernommen werden. Bis dahin
+kann ein Deployment mit dem alten Main-Workflow die Experimental-Verzeichnisse
+entfernen. Alle Veröffentlichungen verwenden dieselbe Pages-Deployment-Warteschlange.
 
 Für die externe Java-Ausführung in Pages unter **Settings → Secrets and variables
 → Actions → Variables** die Repository-Variable `JAVA_SANDBOX_PROXY_URL` auf die
@@ -33,8 +52,12 @@ Danach erneut deployen. Ohne Proxy-URL ist die Folie sichtbar, aber externe
 Ausführung deaktiviert. Die Action hostet keinen Java-/Proxy-Server.
 Konfiguration und Betriebsgrenzen stehen in `slides/README.md`.
 
+Im Proxy muss als erlaubter Origin `https://sippsack.github.io` eingetragen sein
+(bei Nutzung einer eigenen Domain zusätzlich deren Origin).
 Falls die Pages-Umgebung nur Deployments von `main` erlaubt, unter **Settings →
-Environments → github-pages** auch den Experimental-Branch zulassen.
+Environments → github-pages** auch die Experimental-Branches zulassen. Bei
+Environment-Branchregeln mit eingeschränktem Glob-Verhalten für `/` gegebenenfalls
+weitere Regeln für tiefer verschachtelte Branches ergänzen.
 Für automatische Deployments müssen die Änderungen auf GitHub gepusht sein.
 
 ## Veröffentlichte Versionen
